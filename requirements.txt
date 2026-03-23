@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+requests
+huggingface_hub
+python-dotenv
+python-jose[cryptography]
+passlib[argon2]
+sqlalchemy
+jinja2

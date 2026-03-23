@@ -1,0 +1,46 @@
+[debug] [2026-03-22T19:34:19.512Z] ----------------------------------------------------------------------
+[debug] [2026-03-22T19:34:19.523Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\pedre\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init hosting
+[debug] [2026-03-22T19:34:19.525Z] CLI Version:   13.29.1
+[debug] [2026-03-22T19:34:19.525Z] Platform:      win32
+[debug] [2026-03-22T19:34:19.526Z] Node Version:  v22.12.0
+[debug] [2026-03-22T19:34:19.527Z] Time:          Sun Mar 22 2026 20:34:19 GMT+0100 (hora estándar de Europa central)
+[debug] [2026-03-22T19:34:19.527Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-22T19:34:19.558Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-22T19:34:19.560Z] > authorizing via signed-in user (angelapedreralopez@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\pedre\OneDrive\Documentos\SistemasBigData\Web_IA2
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2026-03-22T19:35:00.572Z] Checked if tokens are valid: true, expires at: 1774211612403
+[debug] [2026-03-22T19:35:00.573Z] Checked if tokens are valid: true, expires at: 1774211612403
+[debug] [2026-03-22T19:35:00.577Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=100
+[debug] [2026-03-22T19:35:01.343Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2026-03-22T19:35:01.343Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[info] i  Using project study-ia-b7926 (Study-IA) 
+[info] 
+=== Hosting Setup
+[debug] [2026-03-22T19:35:04.755Z] Checked if tokens are valid: true, expires at: 1774211612403
+[debug] [2026-03-22T19:35:04.756Z] Checked if tokens are valid: true, expires at: 1774211612403
+[debug] [2026-03-22T19:35:04.756Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/study-ia-b7926 [none]
+[debug] [2026-03-22T19:35:05.014Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/study-ia-b7926 200
+[debug] [2026-03-22T19:35:05.016Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/study-ia-b7926 {"projectId":"study-ia-b7926","projectNumber":"41335377064","displayName":"Study-IA","name":"projects/study-ia-b7926","resources":{"hostingSite":"study-ia-b7926"},"state":"ACTIVE","etag":"1_40c30ea1-246d-462f-9b12-4d6f3fe70d6f"}
+[info] 
+[info] Your public directory is the folder (relative to your project directory) that
+[info] will contain Hosting assets to be uploaded with firebase deploy. If you
+[info] have a build process for your assets, use your build's output directory.
+[info] 

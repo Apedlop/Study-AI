@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Study Buddy IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-slate-800">Crea tu cuenta</h2>
+            <p class="text-slate-500 mt-2">Únete para empezar a resumir tus apuntes</p>
+        </div>
+
+        <form action="/register" method="post" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Nombre de usuario</label>
+                <input type="text" name="username" required 
+                    class="w-full mt-1 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600">Contraseña</label>
+                <input type="password" name="password" required 
+                    class="w-full mt-1 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+            </div>
+            
+            <button type="submit" 
+                class="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
+                Registrarse
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+            <p class="text-slate-500 text-sm">
+                ¿Ya tienes cuenta? 
+                <a href="/login" class="text-indigo-600 font-bold hover:underline">Inicia sesión</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
