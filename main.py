@@ -162,12 +162,7 @@ async def process_image(file: UploadFile = File(...), user=Depends(get_current_u
             return {"success": False, "error": "No se detectó texto en la imagen."}
 
         # PASO 2: Generación de material de estudio
-        study_prompt = (
-            f"Analiza este texto: '{extracted_text}'. "
-            "Genera un Resumen Estructurado usando títulos claros y puntos clave. "
-            "Después, genera 3 Flashcards con el formato 'Pregunta: ...' y 'Respuesta: ...'. "
-            "Usa negritas con **texto** para los conceptos importantes."
-        )
+        study_prompt = f"Basado en este texto: '{extracted_text}', crea un resumen estructurado y 3 flashcards (pregunta/respuesta) en español."
         
         final_res = client.chat_completion(
             model="Qwen/Qwen2.5-72B-Instruct",
