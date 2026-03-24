@@ -1,18 +1,27 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>StudyFlow AI | De Papel a Digital</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Estilo para que las flashcards se vean mejor */
+      .flashcard-highlight {
+        background-color: #ffffff;
+        border-left: 4px solid #4f46e5;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+    </style>
   </head>
   <body class="bg-slate-50 min-h-screen font-sans">
     <div class="max-w-4xl mx-auto py-12 px-4">
       <nav class="absolute top-0 right-0 p-6">
         <div class="flex items-center gap-4">
-          <span class="text-slate-600 font-medium"
-            >Hola, {{ user.username }}</span
-          >
+          <span class="text-slate-600 font-medium">Hola, {{ user.username }}</span>
           <a
             href="/logout"
             class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition text-sm font-bold"
@@ -21,6 +30,7 @@
           </a>
         </div>
       </nav>
+
       <header class="text-center mb-12">
         <h1 class="text-4xl font-bold text-indigo-600 mb-2">StudyFlow AI 🚀</h1>
         <p class="text-slate-600">
@@ -29,65 +39,52 @@
       </header>
 
       <div
-        class="bg-white p-8 rounded-2xl shadow-sm border-2 border-dashed border-indigo-200 text-center mb-8"
+        class="bg-white p-8 rounded-2xl shadow-sm border-2 border-dashed border-indigo-200 text-center mb-8 hover:border-indigo-400 transition-colors"
       >
         <input type="file" id="fileInput" class="hidden" accept="image/*" />
-        <label for="fileInput" class="cursor-pointer">
+        <label for="fileInput" class="cursor-pointer block">
           <div class="text-indigo-500 mb-4">
-            <svg
-              class="w-12 h-12 mx-auto"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              ></path>
+            <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
           </div>
-          <span class="text-lg font-medium text-slate-700"
-            >Haz clic para subir o arrastra una imagen</span
-          >
-          <p class="text-sm text-slate-400 mt-1">
-            Soporta JPG, PNG (Apuntes o Libros)
-          </p>
+          <span id="fileName" class="text-lg font-medium text-slate-700">Haz clic para subir o arrastra una imagen</span>
+          <p class="text-sm text-slate-400 mt-1">Soporta JPG, PNG (Apuntes o Libros)</p>
         </label>
+        
         <button
           onclick="uploadFile()"
           id="uploadBtn"
-          class="mt-6 bg-indigo-600 text-white px-8 py-2 rounded-full font-semibold hover:bg-indigo-700 transition hidden"
+          class="mt-6 bg-indigo-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-indigo-700 transition hidden shadow-lg shadow-indigo-200"
         >
           Procesar Apuntes
         </button>
       </div>
 
       <div id="loader" class="hidden text-center py-8">
-        <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"
-        ></div>
-        <p class="mt-4 text-indigo-600 font-medium">
-          Leyendo tus apuntes con GLM-OCR...
-        </p>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+        <p class="mt-4 text-indigo-600 font-medium">Leyendo y analizando tus apuntes...</p>
       </div>
 
       <div id="results" class="space-y-6 hidden">
         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-          <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">
-            📖 Texto Extraído
+          <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2 flex items-center">
+            <span class="mr-2">📖</span> Texto Extraído
           </h3>
-          <p id="ocrText" class="text-slate-600 whitespace-pre-wrap"></p>
+          <p id="ocrText" class="text-slate-600 whitespace-pre-wrap text-sm italic"></p>
         </div>
 
-        <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
-          <h3
-            class="text-lg font-bold text-indigo-800 mb-4 border-b border-indigo-200 pb-2"
-          >
-            ✨ Resumen y Flashcards
+        <div class="bg-white p-6 rounded-xl shadow-md border border-indigo-100">
+          <h3 class="text-lg font-bold text-indigo-800 mb-4 border-b border-indigo-100 pb-2 flex items-center">
+            <span class="mr-2">✨</span> Material de Estudio Generado
           </h3>
-          <div id="aiAnalysis" class="prose max-w-none text-indigo-900"></div>
+          <div id="aiAnalysis" class="text-slate-700 space-y-4 leading-relaxed"></div>
+        </div>
+        
+        <div class="text-center">
+            <button onclick="window.print()" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                🖨️ Guardar como PDF o Imprimir
+            </button>
         </div>
       </div>
     </div>
@@ -95,20 +92,50 @@
     <script>
       const fileInput = document.getElementById("fileInput");
       const uploadBtn = document.getElementById("uploadBtn");
+      const fileNameLabel = document.getElementById("fileName");
 
+      // Detectar cambio de archivo
       fileInput.addEventListener("change", () => {
-        if (fileInput.files.length > 0) uploadBtn.classList.remove("hidden");
+        if (fileInput.files.length > 0) {
+          uploadBtn.classList.remove("hidden");
+          fileNameLabel.innerText = "Archivo listo: " + fileInput.files[0].name;
+          fileNameLabel.classList.add("text-indigo-600");
+        }
       });
+
+      // Función para dar formato al texto de la IA
+      function formatAIResponse(text) {
+        // 1. Convertir negritas **texto** a <strong>texto</strong>
+        let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-900">$1</strong>');
+        
+        // 2. Convertir títulos de Markdown ### o ## a encabezados visuales
+        formatted = formatted.replace(/^### (.*$)/gim, '<h4 class="text-xl font-bold text-indigo-700 mt-6 mb-2">$1</h4>');
+        formatted = formatted.replace(/^## (.*$)/gim, '<h4 class="text-xl font-bold text-indigo-700 mt-6 mb-2">$1</h4>');
+
+        // 3. Detectar Flashcards (Pregunta/Respuesta) y ponerlas en cajitas
+        // Asumiendo que la IA usa "Pregunta:" y "Respuesta:"
+        formatted = formatted.replace(/(Pregunta:.*?\n)(Respuesta:.*)/gi, '<div class="flashcard-highlight"><strong>$1</strong><br>$2</div>');
+
+        // 4. Convertir saltos de línea en párrafos si no están en tags
+        return formatted.split('\n').map(line => {
+            if (line.trim().length === 0) return '<br>';
+            if (line.includes('<h4') || line.includes('<div')) return line;
+            return `<p>${line}</p>`;
+        }).join('');
+      }
 
       async function uploadFile() {
         const file = fileInput.files[0];
+        if (!file) return;
+
         const formData = new FormData();
         formData.append("file", file);
 
-        // UI State
+        // UI State: Mostrar cargando
         document.getElementById("loader").classList.remove("hidden");
         document.getElementById("results").classList.add("hidden");
         uploadBtn.disabled = true;
+        uploadBtn.innerText = "Procesando...";
 
         try {
           const response = await fetch("/process", {
@@ -118,17 +145,27 @@
           const data = await response.json();
 
           if (data.success) {
+            // Insertar Texto OCR
             document.getElementById("ocrText").innerText = data.extracted_text;
-            document.getElementById("aiAnalysis").innerText = data.analysis;
+            
+            // Insertar Análisis formateado
+            const analysisDiv = document.getElementById("aiAnalysis");
+            analysisDiv.innerHTML = formatAIResponse(data.analysis);
+            
+            // Mostrar resultados
             document.getElementById("results").classList.remove("hidden");
+            
+            // Scroll suave hacia los resultados
+            document.getElementById("results").scrollIntoView({ behavior: 'smooth' });
           } else {
-            alert("Error: " + data.error);
+            alert("Error de la IA: " + data.error);
           }
         } catch (err) {
           alert("Error de conexión con el servidor.");
         } finally {
           document.getElementById("loader").classList.add("hidden");
           uploadBtn.disabled = false;
+          uploadBtn.innerText = "Procesar Apuntes";
         }
       }
     </script>
