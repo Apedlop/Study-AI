@@ -1,10 +1,12 @@
 fastapi
 uvicorn
 python-multipart
-requests
-huggingface_hub
 python-dotenv
-python-jose[cryptography]
-passlib[argon2]
-sqlalchemy
+easyocr
 jinja2
+sqlalchemy
+passlib[bcrypt]
+python-jose[cryptography]
+huggingface_hub
+pillow
+opencv-python-headless
