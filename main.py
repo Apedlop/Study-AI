@@ -1,14 +1,20 @@
+import warnings
 import os
 import uuid
-import base64
+import time
+import easyocr
+from PIL import Image
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
-from fastapi import FastAPI, Depends, Form, HTTPException, status, Request, UploadFile, File
+# 1. Silenciar avisos técnicos de librerías para un log limpio
+warnings.filterwarnings("ignore", category=UserWarning)
+os.environ["PYTHONWARNINGS"] = "ignore"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+from fastapi import FastAPI, Depends, Form, HTTPException, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from huggingface_hub import InferenceClient
@@ -22,10 +28,16 @@ load_dotenv()
 SECRET_KEY = os.environ.get("SECRET_KEY", "TU_LLAVE_SECRETA_SUPER_SEGURA") 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
-OCR_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct" 
+
+# Usamos el modelo 7B para máxima velocidad en la API gratuita
+LLM_MODEL = "Qwen/Qwen2.5-7B-Instruct" 
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+
+# Inicializar EasyOCR (Procesamiento Local - Más rápido y fiable que subir la imagen)
+# Esto descarga los modelos la primera vez que se ejecuta
+reader = easyocr.Reader(['es', 'en'], gpu=False) 
 
 # Cliente de Hugging Face
 client = InferenceClient(api_key=os.environ.get("HF_TOKEN"))
@@ -62,29 +74,24 @@ async def get_current_user(request: Request, database: Session = Depends(get_db)
     except JWTError:
         return None
 
-def base64_encode_image(image_path):
-    with open(image_path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
-
-# --- RUTAS DE NAVEGACIÓN (Corregidas para compatibilidad) ---
+# --- RUTAS DE NAVEGACIÓN ---
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request, user=Depends(get_current_user)):
     if not user: 
         return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse(
-        request=request, 
         name="index.html", 
-        context={"user": user}
+        context={"request": request, "user": user}
     )
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse(request=request, name="login.html")
+    return templates.TemplateResponse(name="login.html", context={"request": request})
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
-    return templates.TemplateResponse(request=request, name="register.html")
+    return templates.TemplateResponse(name="register.html", context={"request": request})
 
 # --- ACCIONES DE AUTENTICACIÓN ---
 
@@ -108,8 +115,6 @@ async def login(username: str = Form(...), password: str = Form(...), database: 
     
     token = create_access_token(data={"sub": user.username})
     response = RedirectResponse(url="/", status_code=302)
-    
-    # httponly=True por seguridad. samesite="lax" para evitar CSRF.
     response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax")
     return response
 
@@ -119,70 +124,60 @@ async def logout():
     response.delete_cookie("access_token")
     return response
 
-# --- PROCESAMIENTO CON IA ---
+# --- PROCESAMIENTO HÍBRIDO (OCR Local + IA Nube) ---
 
 @app.post("/process")
 async def process_image(file: UploadFile = File(...), user=Depends(get_current_user)):
     if not user:
-        raise HTTPException(status_code=401, detail="Acceso no autorizado")
-
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="El archivo debe ser una imagen.")
+        return {"success": False, "error": "Inicia sesión para procesar."}
 
     file_path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4()}_{file.filename}")
     
     try:
+        # 1. Guardar y optimizar imagen para OCR
         content = await file.read()
         with open(file_path, "wb") as f:
             f.write(content)
+            
+        with Image.open(file_path) as img:
+            if img.width > 1200:
+                img.thumbnail((1200, 1200))
+                img.save(file_path, optimize=True, quality=85)
 
-        # PASO 1: Extracción de texto (OCR)
-        ocr_result = client.chat_completion(
-            model=OCR_MODEL,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Extrae todo el texto de esta imagen:"},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{file.content_type};base64,{base64_encode_image(file_path)}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            max_tokens=500
-        )
-        
-        extracted_text = ocr_result.choices[0].message.content
+        # 2. OCR LOCAL (Infalible)
+        print(f"--- Iniciando OCR Local ---")
+        results = reader.readtext(file_path, detail=0, paragraph=True)
+        extracted_text = "\n".join(results)
 
-        if not extracted_text or not extracted_text.strip():
+        if not extracted_text.strip():
             return {"success": False, "error": "No se detectó texto en la imagen."}
 
-        # PASO 2: Generación de material de estudio
-        study_prompt = f"Basado en este texto: '{extracted_text}', crea un resumen estructurado y 3 flashcards (pregunta/respuesta) en español."
-        
+        # 3. IA PARA ANÁLISIS (Solo enviamos el texto extraído)
+        print(f"--- Analizando con {LLM_MODEL} ---")
+        prompt = (
+            f"Basado exclusivamente en este texto extraído de mis apuntes: '{extracted_text}'\n\n"
+            "Tarea: Genera un resumen estructurado y 3 flashcards (Pregunta/Respuesta) en español."
+        )
+
         final_res = client.chat_completion(
-            model="Qwen/Qwen2.5-72B-Instruct",
-            messages=[{"role": "user", "content": study_prompt}]
+            model=LLM_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1000
         )
 
         return {
             "success": True,
-            "extracted_text": extracted_text,
+            "extracted_text": extracted_text, # Todo el texto sin recortes
             "analysis": final_res.choices[0].message.content
         }
 
     except Exception as e:
+        print(f"ERROR: {str(e)}")
         return {"success": False, "error": f"Error técnico: {str(e)}"}
     finally:
-        # Limpieza de archivo temporal
         if os.path.exists(file_path):
             os.remove(file_path)
 
 if __name__ == "__main__":
     import uvicorn
-    # 0.0.0.0 es necesario para despliegues en la nube (Render/Railway)
     uvicorn.run(app, host="0.0.0.0", port=8000)
