@@ -9,4 +9,3 @@ passlib[argon2]
 sqlalchemy
 jinja2
 pillow
-easyocr
